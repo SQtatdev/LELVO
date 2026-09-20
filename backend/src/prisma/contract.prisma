@@ -1,0 +1,36 @@
+// use prisma-8
+
+enum UserRole {
+  MANAGER
+  EMPLOYEE
+}
+
+enum ShiftStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         UserRole   @default(EMPLOYEE)
+  createdAt    TimestamptzString @default(now())
+  updatedAt    temporal.updatedAtString()
+
+  shifts       Shift[]
+}
+
+model Shift {
+  id         Int         @id @default(autoincrement())
+  user       User        @relation(fields: [userId], references: [id])
+  userId     Int
+  startTime  TimestamptzString
+  endTime    TimestamptzString
+  status     ShiftStatus @default(SCHEDULED)
+  createdAt  TimestamptzString @default(now())
+  updatedAt  temporal.updatedAtString()
+}
