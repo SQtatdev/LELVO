@@ -1,36 +1,51 @@
-// use prisma-8
-
-enum UserRole {
-  MANAGER
-  EMPLOYEE
-}
-
-enum ShiftStatus {
-  SCHEDULED
-  COMPLETED
-  CANCELLED
-}
-
+// use prisma-next
+// Contract for LELVO shift manager
 model User {
-  id           Int        @id @default(autoincrement())
-  email        String     @unique
-  passwordHash String
+  id           Int            @id(map: "user_pkey") @default(autoincrement())
+  createdAt    Timestamptz    @default(now())
+  email        String         @unique(map: "user_email_key")
   firstName    String
   lastName     String
-  role         UserRole   @default(EMPLOYEE)
-  createdAt    TimestamptzString @default(now())
-  updatedAt    temporal.updatedAtString()
+  passwordHash String
+  role         String         @default("EMPLOYEE")
+  updatedAt    Timestamptz    @default(now())
 
   shifts       Shift[]
+  availability Availability[]
+
+  @@check(expression: "(role = ANY (ARRAY['MANAGER'::text, 'EMPLOYEE'::text]))", map: "user_role_check_8922330b")
+  @@map("user")
 }
 
 model Shift {
-  id         Int         @id @default(autoincrement())
-  user       User        @relation(fields: [userId], references: [id])
-  userId     Int
-  startTime  TimestamptzString
-  endTime    TimestamptzString
-  status     ShiftStatus @default(SCHEDULED)
-  createdAt  TimestamptzString @default(now())
-  updatedAt  temporal.updatedAtString()
+  id        Int         @id(map: "shift_pkey") @default(autoincrement())
+  createdAt Timestamptz @default(now())
+  endTime   Timestamptz
+  startTime Timestamptz
+  status    String      @default("SCHEDULED")
+  updatedAt Timestamptz @default(now())
+  userId    Int
+
+  user      User        @relation(fields:[userId], references:[id], map: "shift_userId_fkey")
+
+  @@index([userId], name: "shift_userId_idx")
+  @@check(expression: "(status = ANY (ARRAY['SCHEDULED'::text, 'COMPLETED'::text, 'CANCELLED'::text]))", map: "shift_status_check_9eaa8e3a")
+  @@map("shift")
+}
+
+model Availability {
+  id        Int         @id @default(autoincrement())
+  createdAt Timestamptz @default(now())
+  updatedAt Timestamptz @default(now())
+
+  date      Timestamptz
+  available Boolean
+  startTime String?
+  endTime   String?
+  userId    Int
+
+  user      User        @relation(fields:[userId], references:[id])
+
+  @@index([userId])
+  @@map("availability")
 }

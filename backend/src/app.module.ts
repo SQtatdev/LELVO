@@ -5,6 +5,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { UsersModule } from './users/users.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { ShiftsModule } from './shifts/shifts.module.js';
+import { AvailabilityModule } from './availability/availability.module.js';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { ShiftsModule } from './shifts/shifts.module.js';
     UsersModule,
     AuthModule,
     ShiftsModule,
+    AvailabilityModule,
   ],
   controllers: [AppController],
   providers: [AppService],

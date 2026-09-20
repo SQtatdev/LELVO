@@ -1,18 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ShiftsController } from './shifts.controller.js';
-import { ShiftsService } from './shifts.service.js';
+import { AvailabilityController } from './availability.controller.js';
+import { AvailabilityService } from './availability.service.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { JwtService } from '@nestjs/jwt';
 
-describe('ShiftsController', () => {
-  let controller: ShiftsController;
+describe('AvailabilityController', () => {
+  let controller: AvailabilityController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [ShiftsController],
+      controllers: [AvailabilityController],
       providers: [
         {
-          provide: ShiftsService,
+          provide: AvailabilityService,
           useValue: {},
         },
         {
@@ -25,7 +25,9 @@ describe('ShiftsController', () => {
       .useValue({})
       .compile();
 
-    controller = module.get<ShiftsController>(ShiftsController);
+    controller = module.get<AvailabilityController>(
+      AvailabilityController,
+    );
   });
 
   it('should be defined', () => {

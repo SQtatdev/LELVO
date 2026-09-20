@@ -1,4 +1,4 @@
-import { ConflictException, Injectable,  NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
@@ -6,53 +6,55 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+    constructor(private readonly prisma: PrismaService) { }
 
-  async findAll() {
-    return await this.prisma.db.orm.public.User.all();
-  }
+    async findAll() {
+        const users = await this.prisma.db.orm.public.User.all();
 
-  async findOne(id: number) {
-  const user = await this.prisma.db.orm.public.User
-    .where({ id })
-    .first();
+        return users.map(({ passwordHash, ...user }) => user);
+    }
 
-  if (!user) {
-    throw new NotFoundException(`User with id ${id} not found`);
-  }
+    async findOne(id: number) {
+        const user = await this.prisma.db.orm.public.User
+            .where({ id })
+            .first();
 
-  return user;
-}
+        if (!user) {
+            throw new NotFoundException(`User with id ${id} not found`);
+        }
 
-  async create(data: CreateUserDto) {
-  const passwordHash = await bcrypt.hash(data.password, 10);
+        return user;
+    }
 
-  const user = await this.prisma.db.orm.public.User.create({
-    email: data.email,
-    passwordHash,
-    firstName: data.firstName,
-    lastName: data.lastName,
-  });
+    async create(data: CreateUserDto) {
+        const passwordHash = await bcrypt.hash(data.password, 10);
 
-  const { passwordHash: _, ...safeUser } = user;
+        const user = await this.prisma.db.orm.public.User.create({
+            email: data.email,
+            passwordHash,
+            firstName: data.firstName,
+            lastName: data.lastName,
+        });
 
-  return safeUser;
-}
+        const { passwordHash: _, ...safeUser } = user;
 
-  async update(id: number, data: UpdateUserDto) {
-  await this.findOne(id);
+        return safeUser;
+    }
 
-  return await this.prisma.db.orm.public.User
-    .where({ id })
-    .update(data);
-}
+    async update(id: number, data: UpdateUserDto) {
+        await this.findOne(id);
 
-async remove(id: number) {
-  await this.findOne(id);
+        return await this.prisma.db.orm.public.User
+            .where({ id })
+            .update(data);
+    }
 
-  return await this.prisma.db.orm.public.User
-    .where({ id })
-    .delete();
-}
-  
+    async remove(id: number) {
+        await this.findOne(id);
+
+        return await this.prisma.db.orm.public.User
+            .where({ id })
+            .delete();
+    }
+
 }

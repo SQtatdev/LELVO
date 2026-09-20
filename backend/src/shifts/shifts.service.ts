@@ -44,8 +44,27 @@ export class ShiftsService {
                 (shift) => new Date(shift.startTime) <= to,
             );
         }
+        shifts.sort(
+            (a, b) =>
+                new Date(a.startTime).getTime() -
+                new Date(b.startTime).getTime(),
+        );
+        const total = shifts.length;
+        const page = Math.max(filters.page ?? 1, 1);
+        const limit = Math.min(Math.max(filters.limit ?? 10, 1), 100);
 
-        return shifts;
+        const start = (page - 1) * limit;
+        const data = shifts.slice(start, start + limit);
+
+        return {
+            data,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
     }
 
     async findOne(id: number) {
