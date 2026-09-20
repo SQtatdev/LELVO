@@ -8,13 +8,44 @@ import {
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateShiftDto } from './dto/create-shift.dto.js';
 import { UpdateShiftDto } from './dto/update-shift.dto.js';
+import { ShiftsFilterDto } from './dto/shifts-filter.dto.js';
 
 @Injectable()
 export class ShiftsService {
     constructor(private readonly prisma: PrismaService) { }
 
-    async findAll() {
-        return await this.prisma.db.orm.public.Shift.all();
+    async findAll(filters: ShiftsFilterDto = {}) {
+        let shifts = await this.prisma.db.orm.public.Shift.all();
+
+        if (filters.userId !== undefined) {
+            shifts = shifts.filter(
+                (shift) => shift.userId === filters.userId,
+            );
+        }
+
+        if (filters.status !== undefined) {
+            shifts = shifts.filter(
+                (shift) => shift.status === filters.status,
+            );
+        }
+
+        if (filters.from !== undefined) {
+            const from = new Date(filters.from);
+
+            shifts = shifts.filter(
+                (shift) => new Date(shift.endTime) >= from,
+            );
+        }
+
+        if (filters.to !== undefined) {
+            const to = new Date(filters.to);
+
+            shifts = shifts.filter(
+                (shift) => new Date(shift.startTime) <= to,
+            );
+        }
+
+        return shifts;
     }
 
     async findOne(id: number) {
@@ -28,6 +59,7 @@ export class ShiftsService {
 
         return shift;
     }
+
 
     async create(data: CreateShiftDto) {
         const startTime = new Date(data.startTime);
@@ -126,18 +158,18 @@ export class ShiftsService {
     }
 
     async findByUser(userId: number) {
-  const user = await this.prisma.db.orm.public.User
-    .where({ id: userId })
-    .first();
+        const user = await this.prisma.db.orm.public.User
+            .where({ id: userId })
+            .first();
 
-  if (!user) {
-    throw new NotFoundException(
-      `User with id ${userId} not found`,
-    );
-  }
+        if (!user) {
+            throw new NotFoundException(
+                `User with id ${userId} not found`,
+            );
+        }
 
-  return await this.prisma.db.orm.public.Shift
-    .where({ userId })
-    .all();
-}
+        return await this.prisma.db.orm.public.Shift
+            .where({ userId })
+            .all();
+    }
 }
