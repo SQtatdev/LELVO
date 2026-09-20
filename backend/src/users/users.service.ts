@@ -2,6 +2,7 @@ import { ConflictException, Injectable,  NotFoundException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -24,15 +25,18 @@ export class UsersService {
 }
 
   async create(data: CreateUserDto) {
-  try {
-    return await this.prisma.db.orm.public.User.create(data);
-  } catch (error: any) {
-    if (error?.sqlState === '23505') {
-      throw new ConflictException('User with this email already exists');
-    }
+  const passwordHash = await bcrypt.hash(data.password, 10);
 
-    throw error;
-  }
+  const user = await this.prisma.db.orm.public.User.create({
+    email: data.email,
+    passwordHash,
+    firstName: data.firstName,
+    lastName: data.lastName,
+  });
+
+  const { passwordHash: _, ...safeUser } = user;
+
+  return safeUser;
 }
 
   async update(id: number, data: UpdateUserDto) {
