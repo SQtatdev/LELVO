@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { Temporal } from 'temporal-polyfill';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateAvailabilityDto } from './dto/create-availability.dto.js';
 import { UpdateAvailabilityDto } from './dto/update-availability.dto.js';
@@ -105,18 +106,17 @@ export class AvailabilityService {
         'Availability for this date already exists',
       );
     }
-
     return await this.prisma.db.orm.public.Availability.create({
-      userId,
-      date: data.date,
-      available: data.available,
-      startTime: data.available
+    userId,
+    date: Temporal.Instant.from(data.date),
+    available: data.available,
+    startTime: data.available
         ? data.startTime
         : null,
-      endTime: data.available
+    endTime: data.available
         ? data.endTime
         : null,
-    });
+});
   }
 
   async update(
@@ -169,17 +169,17 @@ export class AvailabilityService {
     }
 
     return await this.prisma.db.orm.public.Availability
-      .where({ id })
-      .update({
-        date,
+    .where({ id })
+    .update({
+        date: Temporal.Instant.from(date),
         available,
         startTime: available
-          ? data.startTime ?? availability.startTime
-          : null,
+            ? data.startTime ?? availability.startTime
+            : null,
         endTime: available
-          ? data.endTime ?? availability.endTime
-          : null,
-      });
+            ? data.endTime ?? availability.endTime
+            : null,
+    });
   }
 
   async remove(
@@ -203,11 +203,19 @@ export class AvailabilityService {
       .delete();
   }
 
-  private dateOnly(value: string | Date) {
-    return new Date(value)
-      .toISOString()
-      .slice(0, 10);
+  private dateOnly(value: string | Date | Temporal.Instant) {
+  if (typeof value === 'string') {
+    return new Date(value).toISOString().slice(0, 10);
   }
+
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  return new Date(value.epochMilliseconds)
+    .toISOString()
+    .slice(0, 10);
+}
 
   private validateTimeRange(
     startTime?: string | null,

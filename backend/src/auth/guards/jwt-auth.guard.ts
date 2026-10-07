@@ -21,9 +21,17 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync(token);
+      const payload = await this.jwtService.verifyAsync<{
+        sub: number;
+        email: string;
+        role: 'EMPLOYEE' | 'MANAGER';
+      }>(token);
 
-      request['user'] = payload;
+      request['user'] = {
+        id: payload.sub,
+        email: payload.email,
+        role: payload.role,
+      };
     } catch {
       throw new UnauthorizedException();
     }
@@ -31,8 +39,11 @@ export class JwtAuthGuard implements CanActivate {
     return true;
   }
 
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+  private extractTokenFromHeader(
+    request: Request,
+  ): string | undefined {
+    const [type, token] =
+      request.headers.authorization?.split(' ') ?? [];
 
     return type === 'Bearer' ? token : undefined;
   }
